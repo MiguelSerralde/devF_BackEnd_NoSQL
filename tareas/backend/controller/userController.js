@@ -41,12 +41,36 @@ const registerUser = asyncHandler( async (req, res) => {
 })
 
 const loginUser = asyncHandler (async (req, res) => {
-    res.json({ message: 'Login User'})
+    const { email, password } = req.body
+    if(!email || !password){
+        res.status(400)
+        throw new Error('No debe llevar campos vacios')
+    }
+
+    const user = await User.findOne({ email })    
+
+    if(user && (await bcrypt.compare(password, user.password))){
+        res.json({ 
+            message: 'Login Correct',
+            _id: user._id,
+            name: user.name,
+            password: user.password,
+            token: generateSecret(user._id)
+        })    
+    }else {
+        res.status(401).json({ message: 'Incorrect data user'})
+    }    
 })
 
 const getUSerData = asyncHandler (async (req, res) => {
-    res.json({ message: 'Data User'})
+    res.json( req.user ) 
 })
+
+const generateSecret = (id) => {
+    return jwt.sign({id}, process.env.JWT_SECRET, {
+        expiresIn: '30m'
+    })
+}
 
 module.exports = {
     registerUser,
