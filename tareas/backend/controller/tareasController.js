@@ -2,7 +2,7 @@ const asyncHandler = require('express-async-handler')
 const Tarea = require('../models/modelTareas')
 
 const getTareas = asyncHandler(async (req, res) => {
-    const tareas = await Tarea.find()
+    const tareas = await Tarea.find({user: req.user._id})
     res.status(500).json(tareas)
 })
 
@@ -13,7 +13,8 @@ const postTareas = asyncHandler(async  (req, res) => {
     }
 
     const tareas = await Tarea.create({
-        texto: req.body.Texto
+        texto: req.body.Texto,
+        user: req.user._id
     })
     res.status(500).json(tareas)
 })
@@ -23,9 +24,13 @@ const putTareas = asyncHandler( async (req, res) => {
     if(!tareas) {
         res.json({message: 'Registro no encontrado'})
     }
-    const tareaUpdated = await Tarea.findByIdAndUpdate(req.params.id, req.body, { new: true })
-    res.status(200).json(tareaUpdated)
-
+    if(tareas.user.toString() !== req.user._id.toString()){
+        res.status(402)
+        throw new Error('Accesss denied')
+    }else{
+        const tareaUpdated = await Tarea.findByIdAndUpdate(req.params.id, req.body.Texto, { new: true })
+        res.status(200).json(tareaUpdated)
+    }
 })
 
  const deleteTareas =asyncHandler( async(req, res) => {
@@ -33,9 +38,15 @@ const putTareas = asyncHandler( async (req, res) => {
     if(!tareas) {
         res.json({message: 'Registro no encontrado'})
     }
-    tareas.deleteOne()         
-    //const teareDelete = await Tarea.findByAndDelete(req.params.id)
-    res.json({ id: req.params.id})
+    if(tareas.user.toString() !== req.user._id.toString()){
+        res.status(402)
+        throw new Error('Accesss denied')
+    }else{
+        tareas.deleteOne()         
+        //const teareDelete = await Tarea.findByAndDelete(req.params.id)
+        res.json({ id: req.params.id})
+    }
+    
     
 })
 

@@ -68,7 +68,7 @@ const getUSerData = asyncHandler (async (req, res) => {
 
 const generateSecret = (id) => {
     return jwt.sign({id}, process.env.JWT_SECRET, {
-        expiresIn: '30m'
+        expiresIn: '180m'
     })
 }
 
